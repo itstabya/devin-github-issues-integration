@@ -16,8 +16,9 @@ load_dotenv()
 @click.argument('repo', required=True)
 @click.argument('issue_number', type=int, required=True)
 @click.option('--token', help='GitHub personal access token (or set GITHUB_TOKEN env var)')
+@click.option('--devin-token', help='Devin API token for session-based analysis (or set DEVIN_API_TOKEN env var)')
 @click.option('--json', 'output_json', is_flag=True, help='Output results in JSON format')
-def scope_issue(repo, issue_number, token, output_json):
+def scope_issue(repo, issue_number, token, devin_token, output_json):
     """
     Analyze a GitHub issue and provide confidence scoring for resolution.
     
@@ -26,7 +27,8 @@ def scope_issue(repo, issue_number, token, output_json):
     
     Examples:
         scope_issue_cli.py microsoft/vscode 12345
-        scope_issue_cli.py microsoft/vscode 12345 --token=your_token
+        scope_issue_cli.py microsoft/vscode 12345 --token=your_github_token
+        scope_issue_cli.py microsoft/vscode 12345 --devin-token=your_devin_token
         scope_issue_cli.py microsoft/vscode 12345 --json
     """
     
@@ -37,11 +39,17 @@ def scope_issue(repo, issue_number, token, output_json):
         sys.exit(1)
     
     github_token = token or os.getenv('GITHUB_TOKEN')
-    scoper = IssueScoper(github_token)
+    devin_api_token = devin_token or os.getenv('DEVIN_API_TOKEN')
+    scoper = IssueScoper(github_token, devin_api_token)
     
     if not github_token:
         click.echo("Warning: No GitHub token provided. API rate limits will be lower.", err=True)
         click.echo("Set GITHUB_TOKEN environment variable or use --token option.", err=True)
+        click.echo()
+    
+    if not devin_api_token:
+        click.echo("Warning: No Devin API token provided. Using fallback keyword analysis.", err=True)
+        click.echo("Set DEVIN_API_TOKEN environment variable or use --devin-token option for AI-powered analysis.", err=True)
         click.echo()
     
     click.echo(f"Analyzing issue #{issue_number} from {repo}...")

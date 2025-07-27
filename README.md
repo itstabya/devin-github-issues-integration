@@ -25,10 +25,12 @@ cd devin-github-issues-integration
 pip install -r requirements.txt
 ```
 
-3. (Optional) Set up GitHub token for higher API rate limits:
+3. (Optional) Set up tokens for enhanced functionality:
 ```bash
 cp .env.example .env
-# Edit .env and add your GitHub personal access token
+# Edit .env and add your tokens:
+# - GitHub personal access token for higher API rate limits
+# - Devin API token for AI-powered issue analysis
 ```
 
 ### Usage
@@ -69,8 +71,9 @@ python github_issues_cli.py microsoft/vscode
 python github_issues_cli.py microsoft/vscode --token=your_token_here
 ```
 
-## 🔧 GitHub Token Setup
+## 🔧 Token Setup
 
+### GitHub Token Setup
 To avoid API rate limits, set up a GitHub personal access token:
 
 1. Go to GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
@@ -86,15 +89,53 @@ To avoid API rate limits, set up a GitHub personal access token:
    GITHUB_TOKEN=your_token_here
    ```
 
+### Devin API Token Setup
+For AI-powered issue analysis, set up a Devin API token:
+
+1. Go to [Devin Settings](https://app.devin.ai/settings) → API section
+2. Generate a new API token
+3. Copy the generated token
+4. Set it as an environment variable:
+   ```bash
+   export DEVIN_API_TOKEN=your_devin_token_here
+   ```
+   Or add it to your `.env` file:
+   ```
+   DEVIN_API_TOKEN=your_devin_token_here
+   ```
+
+**Note**: Without a Devin API token, the issue scoping will fall back to keyword-based analysis.
+
 ## 📋 CLI Tool Features
 
-The GitHub Issues CLI tool (`github_issues_cli.py`) provides:
-
+### GitHub Issues CLI (`github_issues_cli.py`)
 - **Repository Support**: Works with any public GitHub repository
 - **Flexible Filtering**: Filter by state (open/closed/all), labels, assignees
 - **Rate Limit Handling**: Optional GitHub token support for higher limits
 - **Rich Output**: Formatted display with emojis, metadata, and color coding
 - **Error Handling**: Graceful handling of API errors and invalid inputs
+
+### Issue Scoping CLI (`scope_issue_cli.py`)
+- **AI-Powered Analysis**: Uses Devin API sessions for intelligent issue analysis
+- **Confidence Scoring**: Provides 1-10 confidence scores for issue resolution
+- **Issue Categorization**: Automatically categorizes issues (bug, feature, etc.)
+- **Complexity Assessment**: Evaluates technical complexity (trivial to very complex)
+- **Effort Estimation**: Estimates development time in hours
+- **Dependency Detection**: Identifies blockers and dependencies
+- **Fallback Analysis**: Uses keyword analysis when Devin API unavailable
+- **JSON Output**: Supports structured JSON output for automation
+
+#### Usage Examples:
+```bash
+# Basic issue analysis
+scope-issue-cli microsoft/vscode 12345
+
+# With tokens for enhanced analysis
+scope-issue-cli microsoft/vscode 12345 --token=github_token --devin-token=devin_token
+
+# JSON output for automation
+scope-issue-cli microsoft/vscode 12345 --json
+```
 
 ### Output Format
 
@@ -119,22 +160,23 @@ Example output:
 - [x] Filtering and search capabilities
 - [x] Authentication support
 
-### Phase 2: Issue Scoping 🚧
+### Phase 2: Issue Scoping ✅
 **Goal**: Automatically analyze GitHub issues and provide confidence scores for resolution
 
-**Planned Features**:
-- Devin session integration for issue analysis
-- AI-powered issue complexity assessment
-- Confidence scoring system (1-10 scale)
-- Issue categorization (bug, feature, documentation, etc.)
-- Estimated effort calculation
-- Dependencies and blocker detection
+**Features**:
+- ✅ Devin API session integration for issue analysis
+- ✅ AI-powered issue complexity assessment via Devin sessions
+- ✅ Confidence scoring system (1-10 scale)
+- ✅ Issue categorization (bug, feature, documentation, etc.)
+- ✅ Estimated effort calculation
+- ✅ Dependencies and blocker detection
+- ✅ Fallback to keyword analysis when Devin API unavailable
 
-**Technical Approach**:
-- Integration with Devin API/SDK
-- Natural language processing for issue content analysis
-- Machine learning models for complexity prediction
-- Database for storing analysis results and confidence scores
+**Technical Implementation**:
+- Integration with Devin API for session-based analysis
+- Structured prompts for consistent issue evaluation
+- Session polling and result parsing
+- Graceful fallback to keyword analysis
 
 ### Phase 3: Issue Resolution 🚧
 **Goal**: Automatically execute action plans to resolve GitHub issues
