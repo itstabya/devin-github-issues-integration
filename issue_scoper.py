@@ -450,8 +450,8 @@ Be thorough but concise in your analysis."""
             print(f"Error creating Devin session: {e}")
             return None
     
-    def _wait_for_session_completion(self, session_id: str, max_wait_time: int = 300) -> Optional[str]:
-        """Wait for Devin session to complete and return the analysis result."""
+    def _wait_for_session_completion(self, session_id: str, max_wait_time: int = 300) -> Optional[Dict]:
+        """Wait for Devin session to complete and return the structured analysis result."""
         url = f"{self.devin_base_url}/v1/session/{session_id}"
         start_time = time.time()
         
@@ -463,27 +463,20 @@ Be thorough but concise in your analysis."""
                 response.raise_for_status()
                 session_data = response.json()
                 
-                latest_status = session_data.get('latest_status_contents', {})
-                agent_status = latest_status.get('agent_status', '')
-                status_enum = latest_status.get('enum', '')
+                status_enum = session_data.get('status_enum', '')
                 
-                print(f"Session status: agent_status={agent_status}, enum={status_enum}")
+                print(f"Session status: status_enum={status_enum}")
                 
-                if agent_status == 'finished':
-                    latest_message = session_data.get('latest_message_contents', {})
-                    message_type = latest_message.get('type', '')
-                    print(f"Latest message type: {message_type}")
-                    
-                    if latest_message.get('type') == 'devin_message':
-                        content = latest_message.get('message', '')
-                        print(f"Message content preview: {content[:200]}...")
-                        if '{' in content and '}' in content:  # Look for JSON response
-                            print("Found JSON in message content, returning...")
-                            return content
-                    print("No valid JSON found in latest message")
-                    return None
-                elif latest_status.get('enum') in ['expired']:
-                    print(f"Session {session_id} ended with status: {latest_status.get('enum')}")
+                if status_enum in ['blocked', 'finished']:
+                    structured_output = session_data.get('structured_output', {})
+                    if structured_output:
+                        print("Found structured_output with analysis data!")
+                        return structured_output
+                    else:
+                        print("No structured_output found in session response")
+                        return None
+                elif status_enum in ['expired']:
+                    print(f"Session {session_id} ended with status: {status_enum}")
                     return None
                 
                 time.sleep(10)
@@ -495,17 +488,11 @@ Be thorough but concise in your analysis."""
         print(f"Session {session_id} timed out after {max_wait_time} seconds")
         return None
     
-    def _parse_devin_analysis(self, analysis_text: str, issue_data: Dict) -> Optional[IssueAnalysis]:
-        """Parse Devin's analysis response into IssueAnalysis object."""
+    def _parse_devin_analysis(self, analysis_data: Dict, issue_data: Dict) -> Optional[IssueAnalysis]:
+        """Parse Devin's structured analysis response into IssueAnalysis object."""
         try:
-            start_idx = analysis_text.find('{')
-            end_idx = analysis_text.rfind('}') + 1
-            
-            if start_idx == -1 or end_idx == 0:
-                raise ValueError("No JSON found in analysis response")
-            
-            json_str = analysis_text[start_idx:end_idx]
-            analysis_data = json.loads(json_str)
+            if not analysis_data:
+                raise ValueError("No analysis data provided")
             
             category_map = {
                 'bug': IssueCategory.BUG,
@@ -543,9 +530,9 @@ Be thorough but concise in your analysis."""
                 reasoning=analysis_data.get('reasoning', 'Analysis completed via Devin API')
             )
             
-        except (json.JSONDecodeError, ValueError, KeyError) as e:
+        except (ValueError, KeyError) as e:
             print(f"Error parsing Devin analysis: {e}")
-            print(f"Raw analysis text: {analysis_text[:500]}...")
+            print(f"Raw analysis data: {str(analysis_data)[:500]}...")
             return self._perform_analysis(issue_data)
 
 def format_analysis(analysis: IssueAnalysis) -> str:
