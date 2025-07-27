@@ -461,18 +461,18 @@ Be thorough but concise in your analysis."""
                 response.raise_for_status()
                 session_data = response.json()
                 
-                status = session_data.get('status_enum', '')
+                latest_status = session_data.get('latest_status_contents', {})
+                agent_status = latest_status.get('agent_status', '')
                 
-                if status == 'finished':
-                    messages = session_data.get('messages', [])
-                    for message in reversed(messages):  # Check latest messages first
-                        if message.get('type') == 'devin_message':
-                            content = message.get('message', '')
-                            if '{' in content and '}' in content:  # Look for JSON response
-                                return content
+                if agent_status == 'finished':
+                    latest_message = session_data.get('latest_message_contents', {})
+                    if latest_message.get('type') == 'devin_message':
+                        content = latest_message.get('message', '')
+                        if '{' in content and '}' in content:  # Look for JSON response
+                            return content
                     return None
-                elif status in ['expired', 'blocked']:
-                    print(f"Session {session_id} ended with status: {status}")
+                elif latest_status.get('enum') in ['expired']:
+                    print(f"Session {session_id} ended with status: {latest_status.get('enum')}")
                     return None
                 
                 time.sleep(10)
