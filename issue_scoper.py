@@ -59,7 +59,7 @@ class IssueScoper:
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {self.devin_token}' if self.devin_token else None
         }
-        self.devin_base_url = 'https://api.devin.ai/v1'
+        self.devin_base_url = 'https://api.devin.ai'
     
     def analyze_issue(self, repo_owner: str, repo_name: str, issue_number: int) -> Optional[IssueAnalysis]:
         """
@@ -452,7 +452,7 @@ Be thorough but concise in your analysis."""
     
     def _wait_for_session_completion(self, session_id: str, max_wait_time: int = 300) -> Optional[str]:
         """Wait for Devin session to complete and return the analysis result."""
-        url = f"{self.devin_base_url}/session/{session_id}"
+        url = f"{self.devin_base_url}/sessions/{session_id}"
         start_time = time.time()
         
         print(f"Waiting for session {session_id} to complete...")
