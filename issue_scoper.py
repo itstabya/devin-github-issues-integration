@@ -435,7 +435,7 @@ Be thorough but concise in your analysis."""
     
     def _create_devin_session(self, prompt: str) -> Optional[str]:
         """Create a new Devin session with the analysis prompt."""
-        url = f"{self.devin_base_url}/sessions"
+        url = f"{self.devin_base_url}/v1/sessions"
         payload = {
             "prompt": prompt,
             "unlisted": True  # Keep analysis sessions private
