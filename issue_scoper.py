@@ -452,7 +452,7 @@ Be thorough but concise in your analysis."""
     
     def _wait_for_session_completion(self, session_id: str, max_wait_time: int = 300) -> Optional[str]:
         """Wait for Devin session to complete and return the analysis result."""
-        url = f"{self.devin_base_url}/sessions/{session_id}"
+        url = f"{self.devin_base_url}/v1/session/{session_id}"
         start_time = time.time()
         
         print(f"Waiting for session {session_id} to complete...")
