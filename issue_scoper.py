@@ -455,6 +455,8 @@ Be thorough but concise in your analysis."""
         url = f"{self.devin_base_url}/session/{session_id}"
         start_time = time.time()
         
+        print(f"Waiting for session {session_id} to complete...")
+        
         while time.time() - start_time < max_wait_time:
             try:
                 response = requests.get(url, headers=self.devin_headers)
@@ -463,13 +465,22 @@ Be thorough but concise in your analysis."""
                 
                 latest_status = session_data.get('latest_status_contents', {})
                 agent_status = latest_status.get('agent_status', '')
+                status_enum = latest_status.get('enum', '')
+                
+                print(f"Session status: agent_status={agent_status}, enum={status_enum}")
                 
                 if agent_status == 'finished':
                     latest_message = session_data.get('latest_message_contents', {})
+                    message_type = latest_message.get('type', '')
+                    print(f"Latest message type: {message_type}")
+                    
                     if latest_message.get('type') == 'devin_message':
                         content = latest_message.get('message', '')
+                        print(f"Message content preview: {content[:200]}...")
                         if '{' in content and '}' in content:  # Look for JSON response
+                            print("Found JSON in message content, returning...")
                             return content
+                    print("No valid JSON found in latest message")
                     return None
                 elif latest_status.get('enum') in ['expired']:
                     print(f"Session {session_id} ended with status: {latest_status.get('enum')}")
