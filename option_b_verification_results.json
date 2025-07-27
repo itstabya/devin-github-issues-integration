@@ -1,0 +1,23 @@
+{
+  "timestamp": "2025-07-27 06:14:20 UTC",
+  "devin_api_base_url": "https://api.devin.ai",
+  "has_token": false,
+  "tests": {
+    "session_creation": {
+      "success": false,
+      "error": "No Devin API token available",
+      "endpoint": "POST /v1/sessions"
+    },
+    "session_polling": {
+      "success": false,
+      "skipped": true,
+      "reason": "Session creation failed"
+    },
+    "error_handling": {
+      "success": false,
+      "error": "No Devin API token available",
+      "endpoint": "GET /v1/session/invalid"
+    }
+  },
+  "overall_success": false
+}
