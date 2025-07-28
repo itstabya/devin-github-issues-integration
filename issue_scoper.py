@@ -218,7 +218,8 @@ Be thorough but concise in your analysis."""
                         return structured_output
                     else:
                         print("No structured_output found in session response")
-                        return None
+                        if status_enum == 'finished':
+                            return None
                 elif status_enum in ['expired']:
                     print(f"Session {session_id} ended with status: {status_enum}")
                     return None
