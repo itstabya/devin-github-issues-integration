@@ -18,10 +18,10 @@ load_dotenv()
 @click.option('--token', help='GitHub personal access token (or set GITHUB_TOKEN env var)')
 @click.option('--devin-token', help='Devin API token for session-based analysis (or set DEVIN_API_TOKEN env var)')
 @click.option('--json', 'output_json', is_flag=True, help='Output results in JSON format')
-@click.option('--post-comment', is_flag=True, help='Post analysis results as a comment on the GitHub issue')
-def scope_issue(repo, issue_number, token, devin_token, output_json, post_comment):
+def scope_issue(repo, issue_number, token, devin_token, output_json):
     """
     Analyze a GitHub issue and provide confidence scoring for resolution.
+    Automatically posts analysis results as a comment to the GitHub issue when a token is provided.
     
     REPO should be in the format 'owner/repo-name' (e.g., 'microsoft/vscode')
     ISSUE_NUMBER is the GitHub issue number to analyze
@@ -31,7 +31,6 @@ def scope_issue(repo, issue_number, token, devin_token, output_json, post_commen
         scope_issue_cli.py microsoft/vscode 12345 --token=your_github_token
         scope_issue_cli.py microsoft/vscode 12345 --devin-token=your_devin_token
         scope_issue_cli.py microsoft/vscode 12345 --json
-        scope_issue_cli.py microsoft/vscode 12345 --post-comment
     """
     
     try:
@@ -64,15 +63,11 @@ def scope_issue(repo, issue_number, token, devin_token, output_json, post_commen
     
     formatted_analysis = format_analysis(analysis)
     
-    if post_comment:
-        if not github_token:
-            click.echo("Error: GitHub token is required to post comments. Use --token or set GITHUB_TOKEN environment variable.", err=True)
-            sys.exit(1)
-        
+    if github_token:
         click.echo("Posting analysis as comment to GitHub issue...")
         success = scoper.post_analysis_comment(repo_owner, repo_name, issue_number, formatted_analysis)
         if not success:
-            sys.exit(1)
+            click.echo("Warning: Failed to post comment to GitHub issue, but analysis completed successfully.", err=True)
     
     if output_json:
         import json
