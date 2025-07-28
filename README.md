@@ -25,7 +25,7 @@ cd devin-github-issues-integration
 pip install -r requirements.txt
 ```
 
-3. (Optional) Set up tokens for enhanced functionality:
+3. Set up tokens:
 ```bash
 cp .env.example .env
 # Edit .env and add your tokens:
