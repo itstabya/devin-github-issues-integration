@@ -53,6 +53,82 @@ def scope_issue(repo, issue_number, token, devin_token, output_json):
         click.echo("Set DEVIN_API_TOKEN environment variable or use --devin-token option for AI-powered analysis.", err=True)
         click.echo()
     
+    click.echo(f"Checking for existing analysis on issue #{issue_number} from {repo}...")
+    
+    existing_analysis = scoper._fetch_devin_analysis_from_comments(repo_owner, repo_name, issue_number)
+    
+    if existing_analysis:
+        click.echo("🔍 Found existing Devin analysis on this issue!")
+        click.echo()
+        
+        from issue_scoper import IssueAnalysis, IssueCategory, ComplexityLevel
+        
+        try:
+            category = IssueCategory(existing_analysis['category'])
+        except (ValueError, KeyError):
+            category = IssueCategory.UNKNOWN
+            
+        try:
+            complexity_level = existing_analysis['complexity']['level']
+            complexity_value = existing_analysis['complexity']['value']
+            if complexity_level == 'trivial':
+                complexity = ComplexityLevel.TRIVIAL
+            elif complexity_level == 'simple':
+                complexity = ComplexityLevel.SIMPLE
+            elif complexity_level == 'moderate':
+                complexity = ComplexityLevel.MODERATE
+            elif complexity_level == 'complex':
+                complexity = ComplexityLevel.COMPLEX
+            elif complexity_level == 'very complex':
+                complexity = ComplexityLevel.VERY_COMPLEX
+            else:
+                complexity = ComplexityLevel.MODERATE
+        except (KeyError, TypeError):
+            complexity = ComplexityLevel.MODERATE
+            
+        existing_analysis_obj = IssueAnalysis(
+            issue_number=issue_number,
+            title=f"Issue #{issue_number}",  # We'll get this from the API if needed
+            category=category,
+            complexity=complexity,
+            confidence_score=existing_analysis.get('confidence_score', 5.0),
+            estimated_effort_hours=existing_analysis.get('estimated_effort_hours', 8),
+            key_factors=existing_analysis.get('key_factors', []),
+            blockers=existing_analysis.get('blockers', []),
+            dependencies=existing_analysis.get('dependencies', []),
+            reasoning=existing_analysis.get('reasoning', '')
+        )
+        
+        formatted_existing = format_analysis(existing_analysis_obj)
+        click.echo("📋 Existing Analysis:")
+        click.echo(formatted_existing)
+        click.echo()
+        click.echo("✅ Skipping new analysis since existing analysis was found.")
+        click.echo("💡 The existing analysis is already posted as a comment on the GitHub issue.")
+        
+        if output_json:
+            import json
+            result = {
+                'issue_number': existing_analysis_obj.issue_number,
+                'title': existing_analysis_obj.title,
+                'category': existing_analysis_obj.category.value,
+                'complexity': {
+                    'level': existing_analysis_obj.complexity.name,
+                    'value': existing_analysis_obj.complexity.value
+                },
+                'confidence_score': existing_analysis_obj.confidence_score,
+                'estimated_effort_hours': existing_analysis_obj.estimated_effort_hours,
+                'key_factors': existing_analysis_obj.key_factors,
+                'blockers': existing_analysis_obj.blockers,
+                'dependencies': existing_analysis_obj.dependencies,
+                'reasoning': existing_analysis_obj.reasoning,
+                'source': 'existing_analysis'
+            }
+            click.echo(json.dumps(result, indent=2))
+        
+        return
+    
+    click.echo("🔍 No existing analysis found. Proceeding with new analysis...")
     click.echo(f"Analyzing issue #{issue_number} from {repo}...")
     
     analysis = scoper.analyze_issue(repo_owner, repo_name, issue_number)

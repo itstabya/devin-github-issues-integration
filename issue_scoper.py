@@ -377,6 +377,84 @@ Be thorough but concise in your analysis."""
         except requests.exceptions.RequestException:
             return False
 
+    def _fetch_devin_analysis_from_comments(self, repo_owner: str, repo_name: str, issue_number: int) -> Optional[Dict]:
+        """
+        Fetch the most recent Devin analysis comment from GitHub issue comments.
+        
+        Returns:
+            Dictionary containing parsed analysis data or None if no analysis found
+        """
+        issue_data = self._fetch_issue_details(repo_owner, repo_name, issue_number)
+        if not issue_data:
+            return None
+            
+        comments = issue_data.get('comment_details', [])
+        
+        for comment in reversed(comments):
+            body = comment.get('body', '')
+            if '🤖 Devin Analysis Results' in body and 'devin-ai-integration' in comment.get('user', {}).get('login', ''):
+                return self._parse_analysis_comment(body)
+        
+        return None
+    
+    def _parse_analysis_comment(self, comment_body: str) -> Optional[Dict]:
+        """Parse Devin analysis comment markdown into analysis data dictionary."""
+        import re
+        
+        try:
+            category_match = re.search(r'Category:\s*([^\n]+)', comment_body)
+            complexity_match = re.search(r'Complexity:\s*(\w+)\s*\((\d+)/5\)', comment_body)
+            confidence_match = re.search(r'Confidence Score:\s*([\d.]+)/10', comment_body)
+            effort_match = re.search(r'Estimated Effort:\s*(\d+)\s*hours?', comment_body)
+            
+            key_factors = []
+            factors_section = re.search(r'🔍 Key Factors:(.*?)(?=⚠️|🔗|💭|$)', comment_body, re.DOTALL)
+            if factors_section:
+                factors_text = factors_section.group(1)
+                key_factors = [line.strip().lstrip('• ').strip() for line in factors_text.split('\n') 
+                             if line.strip() and '•' in line and 'None identified' not in line]
+            
+            blockers = []
+            blockers_section = re.search(r'⚠️.*?Potential Blockers:(.*?)(?=🔗|💭|$)', comment_body, re.DOTALL)
+            if blockers_section:
+                blockers_text = blockers_section.group(1)
+                blockers = [line.strip().lstrip('• ').strip() for line in blockers_text.split('\n') 
+                          if line.strip() and '•' in line and 'None identified' not in line]
+            
+            dependencies = []
+            deps_section = re.search(r'🔗 Dependencies:(.*?)(?=💭|$)', comment_body, re.DOTALL)
+            if deps_section:
+                deps_text = deps_section.group(1)
+                dependencies = [line.strip().lstrip('• ').strip() for line in deps_text.split('\n') 
+                              if line.strip() and '•' in line and 'None identified' not in line]
+            
+            reasoning_match = re.search(r'💭 Reasoning:\s*(.*?)(?=---|$)', comment_body, re.DOTALL)
+            reasoning = reasoning_match.group(1).strip() if reasoning_match else ''
+            
+            complexity_level = 'moderate'
+            complexity_value = 3
+            if complexity_match:
+                complexity_level = complexity_match.group(1).strip().lower()
+                complexity_value = int(complexity_match.group(2)) if complexity_match.group(2) else 3
+            
+            return {
+                'category': category_match.group(1).strip().lower() if category_match else 'unknown',
+                'complexity': {
+                    'level': complexity_level,
+                    'value': complexity_value
+                },
+                'confidence_score': float(confidence_match.group(1)) if confidence_match else 5.0,
+                'estimated_effort_hours': int(effort_match.group(1)) if effort_match else 8,
+                'key_factors': key_factors,
+                'blockers': blockers,
+                'dependencies': dependencies,
+                'reasoning': reasoning
+            }
+            
+        except Exception as e:
+            print(f"Error parsing analysis comment: {e}")
+            return None
+
 def format_analysis(analysis: IssueAnalysis) -> str:
     """Format analysis results for display."""
     confidence_emoji = "🟢" if analysis.confidence_score >= 7 else "🟡" if analysis.confidence_score >= 5 else "🔴"

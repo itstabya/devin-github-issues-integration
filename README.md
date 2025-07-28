@@ -7,8 +7,8 @@ A comprehensive automation system that integrates Devin with GitHub Issues to st
 This project aims to build a complete GitHub Issues automation system with three main components:
 
 1. **Issue Discovery** (✅ Complete) - CLI tool to list and filter GitHub issues
-2. **Issue Scoping** (🚧 Planned) - Trigger Devin sessions to analyze issues and assign confidence scores
-3. **Issue Resolution** (🚧 Planned) - Trigger Devin sessions to execute action plans and complete tickets
+2. **Issue Scoping** (✅ Complete) - Trigger Devin sessions to analyze issues and assign confidence scores
+3. **Issue Resolution** (✅ Complete) - Trigger Devin sessions to execute action plans and complete tickets
 
 ## 🚀 Quick Start
 
@@ -122,6 +122,8 @@ For AI-powered issue analysis, set up a Devin API token:
 - **Complexity Assessment**: Evaluates technical complexity (trivial to very complex)
 - **Effort Estimation**: Estimates development time in hours
 - **Dependency Detection**: Identifies blockers and dependencies
+- **Automatic Comment Posting**: Posts analysis results directly to GitHub issues as comments
+- **Duplicate Analysis Detection**: Checks for existing analysis and skips re-analysis
 - **JSON Output**: Supports structured JSON output for automation
 
 #### Usage Examples:
@@ -129,11 +131,28 @@ For AI-powered issue analysis, set up a Devin API token:
 # Basic issue analysis (requires DEVIN_API_TOKEN environment variable)
 python scope_issue_cli.py microsoft/vscode 12345
 
-# With GitHub token for higher API limits
+# With GitHub token for higher API limits and comment posting
 python scope_issue_cli.py microsoft/vscode 12345 --token=github_token
 
 # JSON output for automation
 python scope_issue_cli.py microsoft/vscode 12345 --json
+```
+
+### Issue Resolution CLI (`resolve_issue_cli.py`)
+- **Automatic Analysis Fetching**: Retrieves existing Devin analysis from GitHub issue comments
+- **User Prompting**: Prompts users when no analysis exists with options to scope first or continue
+- **AI-Powered Resolution**: Uses Devin API sessions to execute action plans and resolve issues
+- **PR Creation**: Automatically creates pull requests with implemented solutions
+- **Progress Tracking**: Monitors resolution progress and reports results
+- **Fallback Support**: Can proceed without prior analysis when needed
+
+#### Usage Examples:
+```bash
+# Basic issue resolution (automatically fetches existing analysis)
+python resolve_issue_cli.py microsoft/vscode 12345
+
+# JSON output for automation
+python resolve_issue_cli.py microsoft/vscode 12345 --json
 ```
 
 ### Output Format
@@ -177,23 +196,25 @@ Example output:
 - Session polling and result parsing
 - Streamlined codebase with single analysis pathway
 
-### Phase 3: Issue Resolution 🚧
+### Phase 3: Issue Resolution ✅
 **Goal**: Automatically execute action plans to resolve GitHub issues
 
-**Planned Features**:
-- Automated Devin session triggering for issue resolution
-- Action plan generation and execution
-- Progress tracking and status updates
-- Pull request creation and management
-- Testing and validation automation
-- Success/failure reporting
+**Implemented Features**:
+- ✅ Automated Devin session triggering for issue resolution
+- ✅ Automatic analysis fetching from GitHub issue comments
+- ✅ User prompting when no prior analysis exists
+- ✅ Action plan generation and execution via Devin API
+- ✅ Progress tracking and status updates
+- ✅ Pull request creation and management
+- ✅ Success/failure reporting with detailed results
+- ✅ Fallback support for resolution without prior analysis
 
-**Technical Approach**:
-- Workflow orchestration system
-- Integration with CI/CD pipelines
-- Automated testing frameworks
-- Code review automation
-- Rollback mechanisms for failed attempts
+**Technical Implementation**:
+- GitHub API integration for comment parsing and analysis retrieval
+- Structured prompts for consistent issue resolution
+- Session polling and result parsing with comprehensive error handling
+- Automatic PR creation with detailed resolution summaries
+- User-friendly CLI with interactive prompting for missing analysis
 
 ## 🏗️ Architecture Overview
 
