@@ -277,6 +277,45 @@ Be thorough but concise in your analysis."""
             print(f"Raw analysis data: {str(analysis_data)[:500]}...")
             return None
 
+    def post_analysis_comment(self, repo_owner: str, repo_name: str, issue_number: int, analysis_text: str) -> bool:
+        """
+        Post analysis results as a comment on the GitHub issue.
+        
+        Args:
+            repo_owner: Repository owner
+            repo_name: Repository name  
+            issue_number: Issue number to comment on
+            analysis_text: Formatted analysis text to post
+            
+        Returns:
+            True if comment was posted successfully, False otherwise
+        """
+        if not self.github_token:
+            print("Error: GitHub token is required to post comments")
+            return False
+            
+        url = f'https://api.github.com/repos/{repo_owner}/{repo_name}/issues/{issue_number}/comments'
+        
+        markdown_text = f"""## 🤖 Devin Analysis Results
+
+{analysis_text}
+
+---
+*This analysis was generated automatically by [Devin GitHub Issues Integration](https://github.com/itstabya/devin-github-issues-integration)*"""
+        
+        payload = {
+            'body': markdown_text
+        }
+        
+        try:
+            response = requests.post(url, headers=self.github_headers, json=payload)
+            response.raise_for_status()
+            print(f"✅ Successfully posted analysis comment to issue #{issue_number}")
+            return True
+        except requests.exceptions.RequestException as e:
+            print(f"❌ Error posting comment to GitHub: {e}")
+            return False
+
 def format_analysis(analysis: IssueAnalysis) -> str:
     """Format analysis results for display."""
     confidence_emoji = "🟢" if analysis.confidence_score >= 7 else "🟡" if analysis.confidence_score >= 5 else "🔴"
