@@ -21,7 +21,7 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/itstabya/devin-github-issues-integration",
     packages=find_packages(),
-    py_modules=["github_issues_cli"],
+    py_modules=["github_issues_cli", "scope_issue_cli", "issue_scoper"],
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
@@ -39,6 +39,7 @@ setup(
     entry_points={
         "console_scripts": [
             "github-issues-cli=github_issues_cli:list_issues",
+            "scope-issue-cli=scope_issue_cli:scope_issue",
         ],
     },
     keywords="github issues cli automation devin",
