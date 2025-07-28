@@ -104,7 +104,7 @@ For AI-powered issue analysis, set up a Devin API token:
    DEVIN_API_TOKEN=your_devin_token_here
    ```
 
-**Note**: Without a Devin API token, the issue scoping will fall back to keyword-based analysis.
+**Note**: A Devin API token is required for issue scoping. The automation relies exclusively on the Devin API for analysis.
 
 ## 📋 CLI Tool Features
 
@@ -122,19 +122,18 @@ For AI-powered issue analysis, set up a Devin API token:
 - **Complexity Assessment**: Evaluates technical complexity (trivial to very complex)
 - **Effort Estimation**: Estimates development time in hours
 - **Dependency Detection**: Identifies blockers and dependencies
-- **Fallback Analysis**: Uses keyword analysis when Devin API unavailable
 - **JSON Output**: Supports structured JSON output for automation
 
 #### Usage Examples:
 ```bash
-# Basic issue analysis
-scope-issue-cli microsoft/vscode 12345
+# Basic issue analysis (requires DEVIN_API_TOKEN environment variable)
+python scope_issue_cli.py microsoft/vscode 12345
 
-# With tokens for enhanced analysis
-scope-issue-cli microsoft/vscode 12345 --token=github_token --devin-token=devin_token
+# With GitHub token for higher API limits
+python scope_issue_cli.py microsoft/vscode 12345 --token=github_token
 
 # JSON output for automation
-scope-issue-cli microsoft/vscode 12345 --json
+python scope_issue_cli.py microsoft/vscode 12345 --json
 ```
 
 ### Output Format
@@ -170,13 +169,13 @@ Example output:
 - ✅ Issue categorization (bug, feature, documentation, etc.)
 - ✅ Estimated effort calculation
 - ✅ Dependencies and blocker detection
-- ✅ Fallback to keyword analysis when Devin API unavailable
+- ✅ Lightweight automation relying exclusively on Devin API
 
 **Technical Implementation**:
 - Integration with Devin API for session-based analysis
 - Structured prompts for consistent issue evaluation
 - Session polling and result parsing
-- Graceful fallback to keyword analysis
+- Streamlined codebase with single analysis pathway
 
 ### Phase 3: Issue Resolution 🚧
 **Goal**: Automatically execute action plans to resolve GitHub issues
