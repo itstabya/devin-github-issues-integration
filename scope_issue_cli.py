@@ -21,6 +21,7 @@ load_dotenv()
 def scope_issue(repo, issue_number, token, devin_token, output_json):
     """
     Analyze a GitHub issue and provide confidence scoring for resolution.
+    Automatically posts analysis results as a comment to the GitHub issue when a token is provided.
     
     REPO should be in the format 'owner/repo-name' (e.g., 'microsoft/vscode')
     ISSUE_NUMBER is the GitHub issue number to analyze
@@ -57,8 +58,37 @@ def scope_issue(repo, issue_number, token, devin_token, output_json):
     analysis = scoper.analyze_issue(repo_owner, repo_name, issue_number)
     
     if not analysis:
+        click.echo("Warning: Could not parse structured analysis from Devin session.", err=True)
+        click.echo("This may happen when the session completes but doesn't return expected format.", err=True)
+        
+        if github_token:
+            click.echo("Attempting to extract and post available analysis data as comment...")
+            
+            raw_analysis = scoper.get_raw_session_analysis(repo_owner, repo_name, issue_number)
+            if raw_analysis:
+                success = scoper.post_raw_analysis_comment(repo_owner, repo_name, issue_number, raw_analysis)
+                if success:
+                    click.echo("✅ Successfully posted available analysis as comment to GitHub issue!")
+                    click.echo("📝 Analysis has been documented directly on the GitHub issue.")
+                    sys.exit(0)
+                else:
+                    click.echo("❌ Failed to post comment to GitHub issue.", err=True)
+            else:
+                click.echo("❌ No analysis data could be extracted from the session.", err=True)
+        
         click.echo("Error: Could not analyze issue. Check repository and issue number.", err=True)
         sys.exit(1)
+    
+    formatted_analysis = format_analysis(analysis)
+    
+    if github_token:
+        click.echo("Posting analysis as comment to GitHub issue...")
+        success = scoper.post_analysis_comment(repo_owner, repo_name, issue_number, formatted_analysis)
+        if success:
+            click.echo("✅ Analysis successfully posted as comment to GitHub issue!")
+            click.echo("📝 Full analysis has been documented directly on the GitHub issue.")
+        else:
+            click.echo("Warning: Failed to post comment to GitHub issue, but analysis completed successfully.", err=True)
     
     if output_json:
         import json
@@ -79,7 +109,7 @@ def scope_issue(repo, issue_number, token, devin_token, output_json):
         }
         click.echo(json.dumps(result, indent=2))
     else:
-        click.echo(format_analysis(analysis))
+        click.echo(formatted_analysis)
 
 if __name__ == '__main__':
     scope_issue()
