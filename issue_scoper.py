@@ -218,7 +218,8 @@ Be thorough but concise in your analysis."""
                         return structured_output
                     else:
                         print("No structured_output found in session response")
-                        return None
+                        if status_enum == 'finished':
+                            return None
                 elif status_enum in ['expired']:
                     print(f"Session {session_id} ended with status: {status_enum}")
                     return None
@@ -392,7 +393,7 @@ Be thorough but concise in your analysis."""
         
         for comment in reversed(comments):
             body = comment.get('body', '')
-            if '🤖 Devin Analysis Results' in body and 'devin-ai-integration' in comment.get('user', {}).get('login', ''):
+            if '🤖 Devin Analysis Results' in body:
                 return self._parse_analysis_comment(body)
         
         return None
